@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://dogepups.club/images/dogepups_logo.png" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link href="dogepups.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="title" content="DogePups are the NEW microcap happiness token on the Binance Smart Chain the first litter of the DogeCoin daddy">
+    <meta name="description" content="Buy, collect and trade DogePups on the Binance Smart Chain for happiness">
+    <meta name="keywords" content="tokens,cryptocurrency,blockchain,crypto,BSC,Binance Smart Chain,happy,happiness,doge,dogecoin">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta property="og:title" content="DogePups are the NEW microcap happiness token on the Binance Smart Chain the first litter of the DogeCoin daddy">
+    <meta property="og:site_name" content="The DogePups club">
+    <meta property="og:url" content="https://dogepups.club">
+    <meta property="og:description" content="We bring you happiness with our cute, furry fun face. Joim the club!">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://dogepups.club/images/dogepups_logo.png">
+    <title>DogePups are the NEW microcap happiness token on the Binance Smart Chain the first litter from the DogeCoin daddy</title>
+    <script nomodule>Window.alert("JS modules not supported !")</script>
+    <script type="module">
+        import { ethers } from "./ethers-5.0.esm.min.js";
+        import { Toast } from './bootstrap.esm.js';
+
+        var puppyBreederAddress = '0xDf5cB1c6862d32835B7e6f73D40d15629C3Ceaba';
+        document.getElementById('contract-val').value = puppyBreederAddress;
+
+        function numberWithCommas(x) {
+          return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        const chainEl = document.getElementById('chain-name');
+        const connectMsgEl = document.getElementById('web3-connected-message');
+        const web3Btn = document.getElementById('web3-button');
+        const confirmBuyBtn = document.getElementById('confirm-button');
+        const amountInput = document.getElementById('amount-tokens');
+        const addTknBtn = document.getElementById('add-token');
+        var remainingMintTotal = 'Loading...';
+
+        var provider;
+        var myToastEl = document.getElementById('liveToast')
+
+        function showMyToast(type, header, body) {
+          let elClasses = '';
+          switch(type){
+            case 'success' :
+              elClasses = 'toast text-white bg-success';
+            break;
+            case 'fail':
+              elClasses = 'toast text-white bg-danger';
+            break;
+          }
+          myToastEl.className = elClasses;
+          document.getElementById('toast-header').innerHTML = header;
+          document.getElementById('toast-body').innerHTML = body;
+
+          let myToast = new Toast(myToastEl);
+          myToast.show();
+        }
+
+        Array.from(document.querySelectorAll('.toast'))
+          .forEach(toastNode => new Toast(myToastEl))
+
+        async function getRemainingMint() {
+          let remaingingInMint = await dogePupsContract.publicSaleRemaining();
+          let oldVal = document.getElementById('remaining-mint').innerHTML;
+          console.log(remaingingInMint.toString());
+          //console.log(ethers.utils.formatUnits(remaingingInMint.toString()));
+          remainingMintTotal = ethers.utils.formatUnits(remaingingInMint.toString());
+          let newVal = parseInt(remainingMintTotal).toString();
+          document.getElementById('remaining-mint').innerHTML = newVal;
+          if(oldVal !== newVal){
+            document.getElementById('remaining-mint').classList.add('text-danger');
+            document.getElementById('remaining-mint').classList.add('fw-bold');
+          }else{
+            document.getElementById('remaining-mint').classList.remove('text-danger');
+            document.getElementById('remaining-mint').classList.remove('fw-bold');
+          }
+          if(parseInt(remainingMintTotal) > 0){
+            document.getElementById('buy-button-row').style.visibility = 'visible';
+            document.getElementById('buy-button-row2').style.visibility = 'visible';
+            if(parseInt(amountInput.value) > parseInt(remainingMintTotal)){
+              amountInput.value = parseInt(remainingMintTotal);
+            }
+          }else{
+            clearInterval('getRemainingMint');
+            document.getElementById('remaining-mint').innerHTML = 'SOLD OUT !<br/>check the <a href="#exchanges">Exchanges</a>';
+            document.getElementById('buy-button-row').style.visibility = 'hidden';
+            document.getElementById('buy-button-row2').style.visibility = 'hidden';
+          }
+        }
+
+
+        var dogePupsContract;
+
+        var bnbBalance = 0;
+        const buyRate = 200000000000000;
+        var pupsArtifact;
+
+        async function fetchAsync (url) {
+          let response = await fetch(url);
+          let data = await response.json();
+          return data;
+        }
+
+        async function addToken() {
+          const tokenAddress = puppyBreederAddress;
+          const tokenSymbol = 'DOGEPUPS';
+          const tokenDecimals = 18;
+          const tokenImage = 'https://dogepups.club/images/dogepups_logo.png';
+
+          try {
+            // wasAdded is a boolean. Like any RPC method, an error may be thrown.
+            const wasAdded = await ethereum.request({
+              method: 'wallet_watchAsset',
+              params: {
+                type: 'ERC20', // Initially only supports ERC20, but eventually more!
+                options: {
+                  address: tokenAddress, // The address that the token is at.
+                  symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
+                  decimals: tokenDecimals, // The number of decimals in the token
+                  image: tokenImage, // A string url of the token logo
+                },
+              },
+            });
+
+            if (wasAdded) {
+              console.log('Thanks for your interest!');
+            } else {
+              console.log('Your loss!');
+            }
+          } catch (error) {
+            console.log('Add token error:',error);
+          }
+        }
+
+        const ethEnabled = async () => {
+          if (window.ethereum) {
+            let r = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            //console.log(r);
+            pupsArtifact = await fetchAsync("/contracts/PuppyBreeder.json");
+            addTknBtn.style.display = '';
+            return r[0];
+          }
+          return false;
+        }
+
+        document.getElementById('connectBtn').addEventListener('click', () => {
+          console.log("Connect clicked..");
+          let account = ethEnabled().then(account => start(account))
+        })
+
+        confirmBuyBtn.addEventListener('click', async () => {
+          console.log("Buy clicked..");
+          let cost = ethers.BigNumber.from(amountInput.value).mul(buyRate);
+          //console.log(cost.toString());
+
+          try {
+            let purchaseTX = await dogePupsContract.buy(amountInput.value, {value:cost.toString()});
+            //console.log(purchaseTX);
+            showMyToast('success','Transaction Confirmed','Welcome to DogePup Club! Transaction broadcast to chain. DogePup tokens will arrive momentarily');
+            document.getElementById('bark-sound').play();
+          }catch(e){
+            //console.error("Buy fail:",e.message);
+            showMyToast('fail','Transaction Rejected','You declined minting DogePups tokens.');
+          }
+
+        })
+
+        addTknBtn.addEventListener('click', async (e) => {
+            console.log('Add token..');
+            await addToken();
+        })
+
+        amountInput.addEventListener('keyup', (e) => {
+          amountInput.value = amountInput.value.replace(/[^\d]/g, '');
+          if(parseInt(amountInput.value) > parseInt(remainingMintTotal)){
+            amountInput.value = parseInt(remainingMintTotal);
+          }
+          let total = parseInt(amountInput.value) * 0.0002;
+          document.getElementById('bnb-spend').innerHTML = total.toFixed(4);
+          //console.log('uoh',total,bnbBalance);
+
+          confirmBuyBtn.disabled = true;
+          if(total > bnbBalance && bnbBalance > 0.0002){
+            amountInput.value = parseInt(bnbBalance/0.0002) - 6; //for gas
+            document.getElementById('bnb-spend').innerHTML = bnbBalance - (6*0.0002);
+            confirmBuyBtn.disabled = false;
+          }else if(bnbBalance > 0.0002 && total > 0){
+            confirmBuyBtn.disabled = false;
+          }else{
+            amountInput.value = '';
+            document.getElementById('bnb-spend').innerHTML = 0;
+          }
+        })
+
+        document.getElementById('copy-button').addEventListener('click', () => {
+          console.log("copy clicked");
+          /* Select the text field */
+          document.getElementById('contract-val').select();
+          document.getElementById('contract-val').setSelectionRange(0, 99999); /* For mobile devices */
+
+          /* Copy the text inside the text field */
+          document.execCommand("copy");
+
+          /* Alert the copied text */
+          showMyToast('success','Copied contract address',document.getElementById('contract-val').value);
+        })
+
+        async function start(account) {
+          console.log("Starting,...", account);
+
+          //Die here if wallet not authorized
+          if(!account == undefined){
+            console.log("wallet not authorized yet");
+            return;
+          }
+
+          try{
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+          }catch(e){
+            window.alert('You require a valid wallet, Please read How to Setup your DogePups Wallet');
+            //console.log(e);
+            return;
+          }
+
+          provider.on("network", (newNetwork, oldNetwork) => {
+              // When a Provider makes its initial connection, it emits a "network"
+              // event with a null oldNetwork along with the newNetwork. So, if the
+              // oldNetwork exists, it represents a changing network
+              console.log("changed:",newNetwork,oldNetwork)
+              if (oldNetwork) {
+                  console.log("reloading,.");
+                  window.location.reload();
+              }
+          });
+
+          //Go time
+          amountInput.placeholder = 'Enter amount of DogePup tokens to buy';
+          web3Btn.style.display = "none";
+          connectMsgEl.style.display = "block";
+
+          document.getElementById('account').innerHTML = account.substr(0, 6) + "..." + account.substr(38);
+          const chain = await provider.getNetwork();
+          console.log("P:", chain);
+          if(chain.chainId != undefined){
+            let chainDisplay = 'Loading..';
+            if(chain.chainId != 56 && chain.chainId != 97 && chain.chainId != 1337){
+              //console.log('stop')
+              chainEl.innerHTML = "Please change network in wallet to Smart Chain and refresh";
+              return;
+            }else{
+              //console.log('Go')
+              chainEl.innerHTML = "Smart Chain";
+
+              const signer = provider.getSigner()
+              let balance = await provider.getBalance(account)
+
+              //console.log(ethers.utils.formatEther(balance));
+              bnbBalance = ethers.utils.formatEther(balance);
+              document.getElementById('wallet-balance').innerHTML = parseFloat(bnbBalance).toFixed(4);
+
+              //Only if we are on Smart Chain
+
+              // The Contract object
+              dogePupsContract = new ethers.Contract(puppyBreederAddress, pupsArtifact.abi, signer);
+              //console.log(await dogePupsContract.name());
+
+              await getRemainingMint();
+              setInterval(getRemainingMint, 1000);
+
+/*
+                      dogePupsContract.on("Transfer", (from, to, amount, event) => {
+                        console.log(`${ from } sent ${ formatEther(amount) } to ${ to}`);
+                          // The event object contains the verbatim log data, the
+                          // EventFragment and functions to fetch the block,
+                          // transaction and receipt and event functions
+                          document.getElementById('remaining-mint').innerHTML = 0000;
+                      });
+  */
+
+            }
+          }
+        }
+
+
+
+    </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7S9BYXW238"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-7S9BYXW238');
+  </script>
+  </head>
+  <body class="css-selector" data-bs-spy="scroll" data-bs-target="#navbar">
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v10.0&appId=123357361008421&autoLogAppEvents=1" nonce="gdB3uG0x"></script>
+
+    <nav id="navbar" class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#"><img src="/images/dogepups_coin.svg" style="max-width:32px" alt=""> DogePups</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#vision"> Vision</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#buy">Buy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#community">Community</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#how">How</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#exchanges">Exchanges</a>
+            </li>
+          </ul>
+        </div>
+
+        <div id="web3-connected-message" style="display:none">
+          <span id="account" class="account-info border rounded border-warning bg-success"></span> connected on <span id="chain-name" class="account-info border rounded border-warning bg-success">Detecting chain..</span>
+        </div>
+        <div id="web3-button">
+          <button id="connectBtn" class="btn btn-danger" type="button" />Connect Wallet</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container" data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="0" tabindex="0">
+
+      <div id="vision" class="px-4 py-5 my-5 text-center">
+        <img class="img-fluid" src="/images/dogepups_banner.svg" alt="">
+        <h1 class="display-5 fw-bold">DogePups</h1>
+        <h2>Are you smiling ?</h2><br/>
+        <div class="col-lg-6 mx-auto">
+          <p class="lead mb-4">
+            DogePups are a new class of inspirational  tokens. By owning and trading DogePups, you are spreading the face of happiness and prosperity during light and dark times.<br /><br />
+            If DogeCoins are the large supply daddy dog, DogePups are the first born microcap litter!
+            <br /><br /><span class="">Inspire Happiness today</span><br /><br />
+            <button id="add-token" type="button" class="add-token btn btn-primary" style="display:none">Add <img src="images/dogepups_coin.svg" style="max-width:20px;"/> DogePups Token</button>
+          </p>
+        </div>
+      </div>
+
+      <a id="buy"></a>
+      <div>
+        <h2 class="shadow p-3 mb-5 rounded"><i class="bi bi-tags"></i>Tokenomics / Buy</h2>
+        <p>DogePups are a microcap fully compliant BEP-20 standard token issued on the Binance Smart Chain.</p>
+        <div class="row">
+          <div class="col-sm-2"></div>
+          <div class="col">
+
+            <table class="table border border-warning">
+              <thead>
+                <tr class="table-success">
+                  <th scope="col" class="text-end">Total Supply:</th>
+                  <th scope="col">10,000,000 tokens</th>
+                </tr>
+                <tr class="table-secondary">
+                  <th scope="row" class="text-end">Founders:</th>
+                  <td>300,000 (3%)</td>
+                </tr>
+                <tr class="table-secondary">
+                  <th scope="row" class="text-end">Promotional:</th>
+                  <td>700,000 (7%)</td>
+                </tr>
+                <tr class="table-secondary">
+                  <th scope="row" class="text-end">Public Sale:<br/>Opened May 22, 2021</th>
+                  <td>9,000,000 (90%)</td>
+                </tr>
+                <tr class="table-secondary">
+                  <th scope="row" class="text-end"></th>
+                  <td class="align-middle">1 DogePup = 0.0002 BNB</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="table-light" id="buy-button-row">
+                  <th scope="row" class="text-end">Recommended purchase amount:</th>
+                  <td class="align-middle">10,000</td>
+                </tr>
+                <tr class="table-info">
+                  <th scope="row" class="text-end">Remaining in public sale:</th>
+                  <td><span id="remaining-mint">(Connect Wallet)</span></td>
+                </tr>
+                <tr class="table-light" id="buy-button-row2">
+                  <td colspan="2" class="align-middle">
+                  <div class="row">
+                    <div class="col-2"></div><div class="col text-center">
+
+                    <div class="input-group mb-3">
+                      <input id="amount-tokens" type="text" class="form-control"  maxlength="10" placeholder="Connect Wallet to buy DogePups" aria-label="Buy DogePups" aria-describedby="confirm-button">
+                      <button class="btn btn-primary" type="button" id="confirm-button" disabled>Confirm</button>
+                    </div>
+                    Spend <span id="bnb-spend">0</span> of <span id="wallet-balance">(Connect Wallet)</span> BNB
+                      </div>
+                    <div class="col-2"></div>
+                  </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+          </div>
+          <div class="col-sm-2"></div>
+        </div>
+
+      </div>
+
+      <a name="community" id="community"></a>
+      <div>
+        <h2 class="shadow p-3 mb-5 rounded"><i class="bi bi-puzzle"></i> Community</h2>
+
+        <div class="card border border-warning">
+          <h5 class="card-header">
+            Share the <i class="bi bi-suit-heart"></i>
+          </h5>
+          <div class="card-body">
+            <h5 class="card-title">
+              <div class="row">
+               <div class="col"><script async src="https://telegram.org/js/telegram-widget.js?15" data-telegram-share-url="https://dogepups.club" data-comment="DogePups are the NEW microcap happiness token on the Binance Smart Chain the first litter from the DogeCoin daddy"></script></div>
+               <div class="col">
+                 <a class="twitter-share-button"
+                   href="https://twitter.com/intent/tweet">
+                 Tweet</a>
+               </div>
+               <div class="col">
+                 <div class="fb-share-button" data-href="https://dogepups.club" data-layout="button" data-size="small"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdogepups.club%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Share</a></div>
+               </div>
+             </div>
+            </h5>
+            <p class="card-text">
+              <p>The DogePups are community owned tokens. It is our collective responsibility to ensure we share the message of happiness with my cute furry face.<br/>
+              Worried someone is pulling the rug ? Don't trust people, trust the contract, it is open to everyone to <a href="https://bscscan.com/token/0xdf5cb1c6862d32835b7e6f73d40d15629c3ceaba" target=_blank>view the Live source code here</a>, there are no secret doors, just good intentions !
+              </p>
+              <p>
+                <a href="https://t.me/DogePupsClub">
+                    <button type="button" class="btn btn-primary btn-sm">
+                        <img src="images/telegram-logo.png" class="img-fluid telegram-logo" />
+                        DogePups Telegram Community
+                    </button>
+                </a>
+              </p>
+              <p>Are you a YouTuber ? Do you have some other great promotional ideas ? Contact Us ! there are 700,000 DogePups available to community promoters. Every reward is tracked in the Smart Chain event log for transparency.</p>
+            </p>
+          </div>
+        </div>
+
+      <a name="how" id="how"></a>
+      <div>
+        <h2 class="shadow p-3 mb-5 rounded"><i class="bi bi-clipboard-check"></i> How to Setup your DogePups Wallet</h2>
+
+        <div class="card border border-warning">
+          <h5 class="card-header">Step 1.</h5>
+          <div class="card-body">
+            <h5 class="card-title">Create a secure wallet</h5>
+            <p class="card-text">
+              <div class="row">
+                <div class="col">
+                  <p>On a computer :<br/> <a href="https://metamask.io/download.html" target="_blank"><img src="https://metamask.io/images/mm-logo.svg" /></a></p>
+                </div>
+                <div class="col">
+                  <p>On a Smartphone:<br/> <a href="https://trustwallet.com/" target="_blank"><img src="https://trustwallet.com/assets/images/trust_logotype.svg" alt="Download and install Trust Wallet" /></a><br/>
+                </div>
+              </div>
+            <span class="fw-bold">The secret phrase is the MOST important part</span>, keep it secret, keep it safe. Never share it and ensure you have a copy of the words securely stored in the event you lose access to your phone or computer.
+          </p>
+          </div>
+        </div><br/>
+        <div class="card border border-warning">
+          <h5 class="card-header">Step 2.</h5>
+          <div class="card-body">
+            <h5 class="card-title">Add DogePups to your wallet</h5>
+            <p class="card-text">
+              <p><img src="https://metamask.io/images/mm-logo.svg" /><br/><br/>
+                After you Connect Wallet click the <a href="#vision">Add DogePups Token button</a></p>
+              <hr>
+              <p><img src="https://trustwallet.com/assets/images/trust_logotype.svg" /><br/><br/>
+                At the top right of Trust Wallet, tap <span class="fw-bold">Add Custom Token</span>. Now tap <span class="fw-bold">Ethereum</span> and select <span class="fw-bold">Smart Chain</span>.</p>
+              <p>Copy the official DogePups contract address from this page and paste in the Contract Address box. </p>
+              <p>
+                <div class="input-group mb-3">
+                  <input id="contract-val" type="text" class="form-control" value="0x000000000000000000000000000000" aria-label="DogePups BSC contract address" aria-describedby="copy-button" readonly>
+                  <button class="btn btn-primary" type="button" id="copy-button">Copy</button>
+                </div>
+              </p>
+              <p>Put <span>DogePups</span> as the name, and DOGEPUPS as the symbol. It will autofill 18 for the decimals.<br /><br />
+                 Click Done at the top and you should have DogePups token information added and available in your wallet.</p>
+            </p>
+          </div>
+        </div><br/>
+        <div class="card border border-warning">
+          <h5 class="card-header">Step 3.</h5>
+          <div class="card-body">
+            <h5 class="card-title">Buy BNB on Binance Smart Chain (BSC)</h5>
+            <p class="card-text"><p>On the main screen in your Trust Wallet, tap <span class="fw-bold">Buy</span> in the top right. If you have not verified your identity, Trust Wallet may ask you to follow the KYC ( know your customer) process.
+            There may be a delay before your transaction is processed, this is normal, be patient.</p></p>
+          </div>
+        </div><br/>
+        <div class="card border border-warning">
+          <h5 class="card-header">Step 4.</h5>
+          <div class="card-body">
+            <h5 class="card-title">Buy DogePups tokens</h5>
+            <p class="card-text">DogePups mint rate was <span class="fw-bold">1 DogePup = 0.0002 BNB</span> ( approx. $0.10 - $0.15 USD ).
+                  Once the public sale supply has been purchased, you will have to buy DogePups on exchanges at future market prices.</p>
+                  <p>
+                    <a href="#buy">
+                      <button class="btn btn-primary" type="button">Buy DogePups from contract</button>
+                    </a>
+            </p>
+            Example of a successfully connected wallet with  purchase ready for confirmation<br/>
+            <img src="images/sample_buy_dogepups.png" class="img-fluid" border="2" alt="Sample Wallet connected and DogePups purchase quote" />
+          </p>
+          </div>
+        </div>
+
+      <a name="exchanges" id="exchanges"></a>
+      <div id="">
+        <h2 class="shadow p-3 mb-5 rounded"><i class="bi bi-recycle"></i> Exchanges</h2>
+        <div class="card border border-warning">
+          <h5 class="card-header">Distribution</h5>
+          <div class="card-body">
+            <img class="logo d-block mx-auto mb-4 float-end"" src="/images/dogepups_coin.svg" alt="">
+            <h5 class="card-title">DogePups will be:</h5>
+            <p class="card-text">
+              <ul>
+               <li>Submitted to CoinGecko</li>
+               <li>Submitted to Pancakeswap and Julswap to open liquidity pools</li>
+               <li>Pending the completion of the public sale, submitted to a tier 1 Smart Chain dex</li>
+              </ul>
+             </p>
+          </div>
+        </div><br/>
+
+
+    </div>
+
+
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+      <div id="liveToast" class="toast hide text-white bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <img src="images/dogepups_coin.svg" style="max-width:20px;" class="rounded me-2" alt="...">
+          <strong id="toast-header" class="me-auto text-black">Transaction Rejected</strong>
+          <button type="button" class="btn-close btn-close-black" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div id="toast-body" class="toast-body">
+          You declined minting DogePups tokens.
+        </div>
+      </div>
+    </div>
+
+
+    <audio id="bark-sound">
+      <source src="buy_success.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>window.twttr = (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0],
+      t = window.twttr || {};
+    if (d.getElementById(id)) return t;
+    js = d.createElement(s);
+    js.id = id;
+    js.src = "https://platform.twitter.com/widgets.js";
+    fjs.parentNode.insertBefore(js, fjs);
+
+    t._e = [];
+    t.ready = function(f) {
+      t._e.push(f);
+    };
+
+    return t;
+    }(document, "script", "twitter-wjs"));</script>
+  </body>
+</html>

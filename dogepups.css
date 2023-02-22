@@ -1,0 +1,81 @@
+.css-selector {
+    background: linear-gradient(199deg, #fbeec6, #Fff5d9);
+    background-size: 400% 2000%;
+
+    -webkit-animation: love-doge-pups 52s ease infinite;
+    -moz-animation: love-doge-pups 52s ease infinite;
+    animation: love-doge-pups 52s ease infinite;
+}
+
+@-webkit-keyframes love-doge-pups {
+    0%{background-position:5% 0%}
+    50%{background-position:96% 100%}
+    100%{background-position:5% 0%}
+}
+@-moz-keyframes love-doge-pups {
+    0%{background-position:5% 0%}
+    50%{background-position:96% 100%}
+    100%{background-position:5% 0%}
+}
+@keyframes love-doge-pups {
+    0%{background-position:5% 0%}
+    50%{background-position:96% 100%}
+    100%{background-position:5% 0%}
+}
+
+@keyframes float {
+	0% {
+		transform: translatey(0px);
+	}
+	50% {
+		transform: translatey(-20px);
+	}
+	100% {
+		transform: translatey(0px);
+	}
+}
+
+body {
+  position: relative;
+}
+
+h2 {
+  margin-top: 60px;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.mb-5{
+  margin-bottom: 2rem!important;
+}
+
+
+.logo {
+  max-width: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+@media (min-width: 768px) {
+  .logo {
+    max-width: 20%;
+  }
+  h2 {
+    margin-top:80px;
+    font-size: 3rem;
+  }
+}
+
+#buy-button-row , #buy-button-row2 {
+  visibility:hidden;
+}
+
+.account-info {
+  color: white;
+  padding:4px;
+  margin-right:5px;
+}
+
+.telegram-logo {
+    max-width: 22px;
+}
