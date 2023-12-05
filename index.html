@@ -45,6 +45,7 @@
         const confirmBuyBtn = document.getElementById('confirm-button');
         const amountInput = document.getElementById('amount-tokens');
         const addTknBtn = document.getElementById('add-token');
+        const addTknBtn1 = document.getElementById('add-token1');
         var remainingMintTotal = 'Loading...';
 
         var provider;
@@ -160,6 +161,11 @@
           let account = ethEnabled().then(account => start(account))
         })
 
+        document.getElementById('connectBtn1').addEventListener('click', () => {
+          console.log("Connect clicked..");
+          let account = ethEnabled().then(account => start(account))
+        })
+
         confirmBuyBtn.addEventListener('click', async () => {
           console.log("Buy clicked..");
           let cost = ethers.BigNumber.from(amountInput.value).mul(buyRate);
@@ -178,6 +184,10 @@
         })
 
         addTknBtn.addEventListener('click', async (e) => {
+            console.log('Add token..');
+            await addToken();
+        })
+        addTknBtn1.addEventListener('click', async (e) => {
             console.log('Add token..');
             await addToken();
         })
@@ -474,10 +484,10 @@
             <p class="card-text">
               <div class="row">
                 <div class="col">
-                  <p>On a computer :<br/> <a href="https://metamask.io/download.html" target="_blank"><img src="https://metamask.io/images/mm-logo.svg" /></a></p>
+                  <p>On a computer :<br/> <a href="https://metamask.io/download.html" target="_blank"><img src="images/full-metamask-logo.png" style="max-width: 46%;" alt="Download and install Metamask" /></a></p>
                 </div>
                 <div class="col">
-                  <p>On a Smartphone:<br/> <a href="https://trustwallet.com/" target="_blank"><img src="https://trustwallet.com/assets/images/trust_logotype.svg" alt="Download and install Trust Wallet" /></a><br/>
+                  <p>On a Smartphone:<br/> <a href="https://trustwallet.com/" target="_blank"><img src="images/full-trust-wallet-logo.png" style="max-width: 46%;" alt="Download and install Trust Wallet" /></a><br/>
                 </div>
               </div>
             <span class="fw-bold">The secret phrase is the MOST important part</span>, keep it secret, keep it safe. Never share it and ensure you have a copy of the words securely stored in the event you lose access to your phone or computer.
@@ -489,10 +499,11 @@
           <div class="card-body">
             <h5 class="card-title">Add DogePups to your wallet</h5>
             <p class="card-text">
-              <p><img src="https://metamask.io/images/mm-logo.svg" /><br/><br/>
-                After you Connect Wallet click the <a href="#vision">Add DogePups Token button</a></p>
+              <p><img src="images/full-metamask-logo.png" style="max-width: 36%;" alt="Metamask" /><br/><br/>
+                After you <button id="connectBtn1" class="btn btn-danger" type="button" />Connect Wallet</button> click the 
+                <button id="add-token1" type="button" class="add-token btn btn-primary">Add <img id="" src="images/dogepups_coin.svg" style="max-width:20px;"/> DogePups Token</button></p>
               <hr>
-              <p><img src="https://trustwallet.com/assets/images/trust_logotype.svg" /><br/><br/>
+              <p><img src="images/full-trust-wallet-logo.png" style="max-width: 36%;" alt="Trust Wallet" /><br/><br/>
                 At the top right of Trust Wallet, tap <span class="fw-bold">Add Custom Token</span>. Now tap <span class="fw-bold">Ethereum</span> and select <span class="fw-bold">Smart Chain</span>.</p>
               <p>Copy the official DogePups contract address from this page and paste in the Contract Address box. </p>
               <p>
@@ -543,7 +554,7 @@
               <ul>
                <li>Submitted to CoinGecko</li>
                <li>Submitted to Pancakeswap and Julswap to open liquidity pools</li>
-               <li>Pending the completion of the public sale, submitted to a tier 1 Smart Chain dex</li>
+               <li>Pending the completion of the public sale, submitted to multiple tier 1 CEXs</li>
               </ul>
              </p>
           </div>
